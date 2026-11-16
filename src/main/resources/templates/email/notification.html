@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{email/layout :: layout(${subject}, ${subject}, ~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <div class="eyebrow" style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#4338ca;">Notification</div>
+    <h1 class="t-head h1" style="margin:0 0 16px;font-size:26px;line-height:1.25;font-weight:700;color:#0f172a;letter-spacing:-.4px;" th:text="${subject}">Subject</h1>
+
+    <p class="t-body" style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#475569;">
+        Hi <strong class="t-head" style="color:#0f172a;" th:text="${name}">Reader</strong>,
+    </p>
+    <p class="t-body" style="margin:0;font-size:15px;line-height:1.7;color:#475569;white-space:pre-line;" th:text="${message}">Message</p>
+
+    <th:block th:if="${actionLink != null}">
+        <th:block th:replace="~{email/components :: button(${actionLink}, ${actionLabel})}"></th:block>
+    </th:block>
+
+    <th:block th:replace="~{email/components :: signoff}"></th:block>
+</th:block>
+</body>
+</html>

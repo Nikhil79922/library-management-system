@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout(subject, preheader, content)" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <title th:text="${subject}">Email</title>
+    <style>
+        body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; }
+        table { border-spacing: 0; }
+        td { padding: 0; }
+        img { border: 0; outline: none; text-decoration: none; }
+        a { color: #4338ca; }
+        @media only screen and (max-width: 620px) {
+            .container { width: 100% !important; }
+            .px { padding-left: 24px !important; padding-right: 24px !important; }
+            .h1 { font-size: 23px !important; }
+        }
+        @media (prefers-color-scheme: dark) {
+            .bg { background: #0b1020 !important; }
+            .card { background: #111827 !important; border-color: #1f2937 !important; }
+            .t-head { color: #f9fafb !important; }
+            .t-body { color: #cbd5e1 !important; }
+            .t-muted { color: #94a3b8 !important; }
+            .eyebrow { color: #a5b4fc !important; }
+            .panel { background: #0f172a !important; border-color: #1f2937 !important; }
+            .rule { border-color: #1f2937 !important; }
+            .warn { background: #2a1f0a !important; border-color: #5b4412 !important; color: #fcd34d !important; }
+            .pill-red { background: #3b1114 !important; border-color: #7f1d1d !important; color: #fca5a5 !important; }
+            .step-num { background: #1e1b4b !important; color: #a5b4fc !important; }
+            a.link { color: #a5b4fc !important; }
+        }
+    </style>
+</head>
+<body class="bg" style="margin:0;padding:0;background:#f3f4f8;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+
+<!-- Preheader (inbox preview text) -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;font-size:1px;line-height:1px;color:#f3f4f8;">
+    <span th:text="${preheader}">Preview text</span>
+    &#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;
+</div>
+
+<table role="presentation" class="bg" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f3f4f8" style="background:#f3f4f8;">
+    <tr>
+        <td align="center" style="padding:40px 16px;">
+
+            <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0"
+                   style="width:600px;max-width:600px;">
+
+                <!-- HEADER -->
+                <tr>
+                    <td align="center" style="padding:0 0 24px;">
+                        <table role="presentation" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td width="40" height="40" align="center" valign="middle"
+                                    style="width:40px;height:40px;background:#4338ca;border-radius:10px;color:#ffffff;font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;line-height:40px;"
+                                    th:text="${#strings.substring(appName,0,1)}">L</td>
+                                <td class="t-head" valign="middle"
+                                    style="padding-left:12px;font-size:19px;font-weight:700;color:#0f172a;letter-spacing:-.2px;"
+                                    th:text="${appName}">Library Management System</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- CARD -->
+                <tr>
+                    <td class="card"
+                        style="background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td height="4" bgcolor="#4338ca"
+                                    style="height:4px;line-height:4px;font-size:0;background:#4338ca;">&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class="px" style="padding:40px 44px 36px;">
+                                    <!-- BODY (dynamic) -->
+                                    <th:block th:replace="${content}"></th:block>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+                <tr>
+                    <td align="center" class="px" style="padding:28px 24px 0;">
+                        <div style="font-size:13px;line-height:1.6;">
+                            <a class="link" th:href="${appUrl}" style="color:#4338ca;text-decoration:none;font-weight:600;">Visit Library</a>
+                            <span style="color:#cbd5e1;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+                            <a class="link" th:href="${appUrl} + '/help'" style="color:#4338ca;text-decoration:none;font-weight:600;">Help Center</a>
+                            <span style="color:#cbd5e1;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+                            <a class="link" th:href="${appUrl} + '/privacy'" style="color:#4338ca;text-decoration:none;font-weight:600;">Privacy Policy</a>
+                            <span style="color:#cbd5e1;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+                            <a class="link" th:href="'mailto:' + ${supportEmail}" style="color:#4338ca;text-decoration:none;font-weight:600;">Contact Support</a>
+                        </div>
+                        <div class="t-muted" style="margin-top:18px;font-size:12px;line-height:1.7;color:#94a3b8;">
+                            You are receiving this email because you have an account with
+                            <span th:text="${appName}">Library Management System</span>.<br>
+                            This is an automated message, please do not reply directly.<br>
+                            <span th:if="${address != null and !address.isEmpty()}" th:text="${address}"></span>
+                            <span th:if="${address != null and !address.isEmpty()}"><br></span>
+                            &copy; <span th:text="${year}">2026</span>
+                            <span th:text="${appName}">Library Management System</span>. All rights reserved.
+                        </div>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

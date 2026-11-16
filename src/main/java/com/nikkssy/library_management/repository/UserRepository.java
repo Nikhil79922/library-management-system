@@ -1,0 +1,32 @@
+package com.nikkssy.library_management.repository;
+
+import com.nikkssy.library_management.entity.Users;
+import com.nikkssy.library_management.entity.enums.AuthProvider;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<Users, Long> {
+
+    Optional<Users> findByUsernameIgnoreCaseOrEmailIgnoreCase(
+            String username,
+            String email
+    );
+
+    Optional<Users> findByEmailIgnoreCase(String email);
+
+    boolean existsByUsername(String username);
+
+    boolean existsByEmail(String email);
+
+    Optional<Users> findByUsername(String username);
+
+    Optional<Users> findByEmail(String email);
+
+    Optional<Users> findByProviderAndProviderId(AuthProvider provider, String providerId );
+}
+
+

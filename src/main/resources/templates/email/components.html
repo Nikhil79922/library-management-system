@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Usage: th:replace="~{email/components :: button(${url}, 'Label')}" -->
+<table role="presentation" cellpadding="0" cellspacing="0" th:fragment="button(url, label)"
+       style="margin:28px 0;">
+    <tr>
+        <td bgcolor="#4338ca" style="background:#4338ca;border-radius:8px;">
+            <a th:href="${url}" th:text="${label}"
+               style="display:inline-block;padding:14px 30px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1;color:#ffffff;text-decoration:none;border-radius:8px;">Action</a>
+        </td>
+    </tr>
+</table>
+
+<!-- Usage: th:replace="~{email/components :: signoff}" -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" th:fragment="signoff"
+       style="margin-top:32px;">
+    <tr>
+        <td class="rule t-muted"
+            style="border-top:1px solid #e5e7eb;padding-top:20px;font-size:14px;line-height:1.6;color:#64748b;">
+            Best regards,<br>
+            <strong class="t-head" style="color:#0f172a;">The Library Management Team</strong>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
