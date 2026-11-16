@@ -12,8 +12,10 @@ import com.nikkssy.library_management.services.helper.cookies.AuthCookieManageme
 import com.nikkssy.library_management.services.impl.auth.AuthServiceImpl;
 import com.nikkssy.library_management.services.impl.auth.PasswordResetServiceImpl;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -28,6 +30,7 @@ import java.time.LocalDateTime;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class AuthController {
 
     private final AuthServiceImpl authService;
@@ -167,10 +170,10 @@ public class AuthController {
 
     // Request password reset email
     @PostMapping("/forgot-password")
-    public ResponseEntity<SuccessResponse<Void>> forgotPassword(
-            @Valid @RequestBody ForgotPasswordRequest request
+    public ResponseEntity<?> forgotPassword(
+            @RequestBody ForgotPasswordRequest request
     ) {
-
+        // Business logic
         passwordResetService.forgotPassword(request.email());
 
         return ResponseEntity.ok()

@@ -1,4 +1,4 @@
-package com.nikkssy.library_management.services.helper.security;
+package com.nikkssy.library_management.services.helper.security.jwt;
 
 import com.nikkssy.library_management.entity.Users;
 import com.nikkssy.library_management.model.CustomUserDetails;
@@ -60,6 +60,8 @@ public class JwtService {
                 roles
         );
     }
+
+
 
     // Common JWT generation logic
     private String generateToken(

@@ -16,7 +16,6 @@ public record UserResponse(
         String countryCode,
         String country,
         String countrySortCode,
-        AuthProvider provider,
         Boolean enabled,
         Role role,
         LocalDateTime createdAt,

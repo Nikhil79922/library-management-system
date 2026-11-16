@@ -2,6 +2,7 @@ package com.nikkssy.library_management.services.businessLogic.auth;
 
 import com.nikkssy.library_management.dto.auth.request.LoginRequest;
 import com.nikkssy.library_management.dto.auth.request.RegisterRequest;
+import com.nikkssy.library_management.entity.UserAuthProvider;
 import com.nikkssy.library_management.exception.IllegalArgumentException;
 import com.nikkssy.library_management.dto.auth.response.AuthResult;
 import com.nikkssy.library_management.entity.RefreshToken;
@@ -9,8 +10,9 @@ import com.nikkssy.library_management.entity.Users;
 import com.nikkssy.library_management.mapper.auth.AuthResultMapper;
 import com.nikkssy.library_management.mapper.UserMapper;
 import com.nikkssy.library_management.model.CustomUserDetails;
+import com.nikkssy.library_management.repository.UserAuthProviderRepository;
 import com.nikkssy.library_management.repository.UserRepository;
-import com.nikkssy.library_management.services.helper.security.JwtService;
+import com.nikkssy.library_management.services.helper.security.jwt.JwtService;
 import com.nikkssy.library_management.services.impl.auth.AuthServiceImpl;
 import com.nikkssy.library_management.services.impl.auth.RefreshTokenServiceImpl;
 import com.nikkssy.library_management.services.impl.email.EmailServiceImpl;
@@ -34,7 +36,7 @@ public class AuthService implements AuthServiceImpl {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final AuthResultMapper authResultMapper;
-
+    private final UserAuthProviderRepository userAuthProviderRepository;
     private final RefreshTokenServiceImpl refreshTokenService;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
@@ -63,7 +65,17 @@ public class AuthService implements AuthServiceImpl {
                 passwordEncoder.encode(registerRequest.password())
         );
 
+        // 1. Save user first to generate the ID
         Users savedUser = userRepository.save(user);
+
+        // 2. Create LOCAL authentication mapping
+        UserAuthProvider authProvider =
+                userMapper.toLocalAuthProvider(savedUser);
+
+        // 3. Associate provider with user
+        savedUser.addAuthProvider(authProvider);
+
+        userAuthProviderRepository.save(authProvider);
 
         Authentication authentication =
                 authenticationManager.authenticate(
@@ -78,28 +90,16 @@ public class AuthService implements AuthServiceImpl {
         var refreshToken =
                 refreshTokenService.createRefreshToken(savedUser);
 
+        // 8. Send welcome email
         sendWelcomeEmail(savedUser);
 
         return authResultMapper.toAuthResult(
                 accessToken,
                 refreshToken,
-                user
+                savedUser
         );
     }
 
-    private void sendWelcomeEmail(Users user) {
-
-        // A mail failure must not fail a successful registration.
-        try {
-            emailService.sendWelcomeEmail(
-                    user.getEmail(),
-                    user.getUsername(),
-                    frontendBaseUrl
-            );
-        } catch (Exception e) {
-            log.warn("Welcome email failed for user {}", user.getUsername(), e);
-        }
-    }
 
     // LOGIN
     @Override
@@ -171,5 +171,21 @@ public class AuthService implements AuthServiceImpl {
     @Transactional
     public int logOutAll(String userName) {
         return refreshTokenService.revokeAllUserTokens(userName);
+    }
+
+
+
+    private void sendWelcomeEmail(Users user) {
+
+        // A mail failure must not fail a successful registration.
+        try {
+            emailService.sendWelcomeEmail(
+                    user.getEmail(),
+                    user.getUsername(),
+                    frontendBaseUrl
+            );
+        } catch (Exception e) {
+            log.warn("Welcome email failed for user {}", user.getUsername(), e);
+        }
     }
 }

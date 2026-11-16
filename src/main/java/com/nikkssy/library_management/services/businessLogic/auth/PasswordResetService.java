@@ -1,7 +1,11 @@
 package com.nikkssy.library_management.services.businessLogic.auth;
 
+import com.nikkssy.library_management.entity.UserAuthProvider;
 import com.nikkssy.library_management.entity.Users;
+import com.nikkssy.library_management.entity.enums.AuthProvider;
+import com.nikkssy.library_management.mapper.UserMapper;
 import com.nikkssy.library_management.mapper.auth.PasswordResetMapper;
+import com.nikkssy.library_management.repository.UserAuthProviderRepository;
 import com.nikkssy.library_management.repository.UserRepository;
 import com.nikkssy.library_management.services.impl.auth.PasswordResetServiceImpl;
 import com.nikkssy.library_management.services.impl.auth.PasswordResetTokenServiceImpl;
@@ -28,6 +32,8 @@ public class PasswordResetService implements PasswordResetServiceImpl {
     private final EmailServiceImpl emailService;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
+    private final UserMapper userMapper;
+    private final UserAuthProviderRepository userAuthProviderRepository;
 
     @Value("${app.frontend.base-url}")
     private String frontendBaseUrl;
@@ -43,7 +49,6 @@ public class PasswordResetService implements PasswordResetServiceImpl {
 
         userRepository.findByEmailIgnoreCase(normalizedEmail)
                 .filter(user -> Boolean.TRUE.equals(user.getEnabled()))
-                .filter(user -> user.getPassword() != null)
                 .ifPresent(this::sendPasswordResetEmail);
     }
 
@@ -68,6 +73,7 @@ public class PasswordResetService implements PasswordResetServiceImpl {
         );
     }
 
+
     @Override
     @Transactional
     public void resetPassword(String token, String newPassword) {
@@ -77,18 +83,38 @@ public class PasswordResetService implements PasswordResetServiceImpl {
         Users user =
                 passwordResetTokenService.validateResetToken(normalizedToken);
 
+        // Set the new local password.
         String encodedPassword = passwordEncoder.encode(newPassword);
 
         user.setPassword(encodedPassword);
         user.setPasswordChangedAt(Instant.now());
 
+        // Check whether the user already supports LOCAL authentication.
+        boolean hasLocalProvider = user.getAuthProviders()
+                .stream()
+                .anyMatch(provider ->
+                        provider.getProvider() == AuthProvider.LOCAL
+                );
+
+        // Google-only users get LOCAL authentication after setting a password.
+        if (!hasLocalProvider) {
+
+            UserAuthProvider localProvider =
+                    userMapper.toLocalAuthProvider(user);
+
+            user.addAuthProvider(localProvider);
+
+            userAuthProviderRepository.save(localProvider);
+        }
+
         userRepository.save(user);
 
-        // Revoke all active refresh tokens for this user
+        // Revoke all active refresh tokens for this user.
         refreshTokenService.revokeAllUserTokens(user.getUsername());
 
         sendPasswordChangedEmail(user);
     }
+
 
     private void sendPasswordChangedEmail(Users user) {
 

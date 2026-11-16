@@ -1,14 +1,18 @@
 package com.nikkssy.library_management.config;
 
-import com.nikkssy.library_management.security.handler.CustomAccessDeniedHandler;
-import com.nikkssy.library_management.security.handler.CustomAuthenticationEntryPoint;
-import com.nikkssy.library_management.services.helper.security.CustomUserDetailsService;
+import com.nikkssy.library_management.security.jwthandler.CustomAccessDeniedHandler;
+import com.nikkssy.library_management.security.jwthandler.CustomAuthenticationEntryPoint;
+import com.nikkssy.library_management.security.oAuthHandler.GoogleAuthFailureHandler;
+import com.nikkssy.library_management.security.oAuthHandler.GoogleAuthSuccessHandler;
+import com.nikkssy.library_management.services.helper.security.jwt.CustomUserDetailsService;
+import com.nikkssy.library_management.services.helper.security.oAuth.CustomOidcUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -38,6 +42,9 @@ public class SecurityConfig {
 
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
+    private final CustomOidcUserService customOidcUserService;
+    private final GoogleAuthSuccessHandler googleAuthSuccessHandler;
+    private final GoogleAuthFailureHandler googleAuthFailureHandler;
 
     @Bean
     public PasswordEncoder bCryptPasswordEncoder() {
@@ -66,6 +73,7 @@ public class SecurityConfig {
     }
 
     @Bean
+    @Order(2)
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             DaoAuthenticationProvider authenticationProvider,
@@ -127,6 +135,39 @@ public class SecurityConfig {
                 .build();
     }
 
+
+    @Bean
+    @Order(1)
+    public SecurityFilterChain oauth2SecurityFilterChain(
+            HttpSecurity http
+    ) throws Exception {
+
+        return http
+                .securityMatcher(
+                        "/oauth2/**",
+                        "/login/oauth2/**"
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(
+                                SessionCreationPolicy.IF_REQUIRED
+                        )
+                )
+                .oauth2Login(oauth2 -> oauth2
+
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .oidcUserService(customOidcUserService)
+                        )
+
+                        .successHandler(googleAuthSuccessHandler)
+
+                        .failureHandler(googleAuthFailureHandler)
+                )
+                .build();
+    }
+
     public CorsConfigurationSource corsConfigurationSource(){
         return new CorsConfigurationSource() {
             @Override
@@ -138,65 +179,12 @@ public class SecurityConfig {
                 cfs.setAllowedHeaders(Collections.singletonList("*"));
                 cfs.setExposedHeaders(Collections.singletonList("Authorization"));
                 cfs.setMaxAge(3600L);
-                return null;
+                return cfs;
             }
         };
     }
 
 
-    // =========================
-    // JWT Secret Key
-    // =========================
-
-    @Bean("auth-jwtSecretKey")
-    public SecretKey jwtSecretKey(
-            @Value("${jwt.secret}") String secret
-    ) {
-
-        byte[] decodedKey = Base64.getDecoder()
-                .decode(secret);
-
-        return new SecretKeySpec(
-                decodedKey,
-                "HmacSHA256"
-        );
-    }
-
-
-    // =========================
-    // JWT Encoder
-    // =========================
-
-    @Bean("auth-jwtEncoder")
-    public JwtEncoder jwtEncoder(@Qualifier("auth-jwtSecretKey") SecretKey secretKey) {
-        return NimbusJwtEncoder
-                .withSecretKey(secretKey)
-                .algorithm(MacAlgorithm.HS256)
-                .build();
-    }
-
-    // =========================
-    // JWT Decoder
-    // =========================
-
-    @Bean("auth-jwtDecoder")
-    public JwtDecoder jwtDecoder(
-            @Qualifier("auth-jwtSecretKey") SecretKey secretKey,
-            @Value("${jwt.issuer}") String issuer
-    ) {
-
-        NimbusJwtDecoder decoder =
-                NimbusJwtDecoder
-                        .withSecretKey(secretKey)
-                        .macAlgorithm(MacAlgorithm.HS256)
-                        .build();
-
-        decoder.setJwtValidator(
-                JwtValidators.createDefaultWithIssuer(issuer)
-        );
-
-        return decoder;
-    }
 
     // =========================
     // JWT Authorities Converter

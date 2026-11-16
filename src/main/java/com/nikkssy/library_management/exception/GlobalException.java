@@ -438,6 +438,28 @@ public class GlobalException {
 
     /*
      * ============================================================
+     * 409 - OAuth2AuthenticationException
+     * ============================================================
+     */
+    @ExceptionHandler(OAuth2AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleOAuth2AuthenticationException(
+            OAuth2AuthenticationException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.CONFLICT;
+
+        return ResponseEntity.status(status)
+                .body(new ErrorResponse(
+                        false,
+                        exception.getMessage(),
+                        LocalDateTime.now(),
+                        status.value(),
+                        request.getRequestURI()
+                ));
+    }
+
+    /*
+     * ============================================================
      * 401 - BadCredentialsException
      * ============================================================
      */

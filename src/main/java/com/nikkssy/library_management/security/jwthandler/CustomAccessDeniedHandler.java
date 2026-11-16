@@ -1,4 +1,4 @@
-package com.nikkssy.library_management.security.handler;
+package com.nikkssy.library_management.security.jwthandler;
 
 import tools.jackson.databind.json.JsonMapper;
 import com.nikkssy.library_management.dto.commonRes.ErrorResponse;
@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -20,23 +20,23 @@ import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
-public class CustomAuthenticationEntryPoint
-        implements AuthenticationEntryPoint {
+public class CustomAccessDeniedHandler
+        implements AccessDeniedHandler {
 
     private final JsonMapper jsonMapper;
 
     @Override
-    public void commence(
+    public void handle(
             HttpServletRequest request,
             HttpServletResponse response,
-            AuthenticationException authException
+            AccessDeniedException accessDeniedException
     ) throws IOException, ServletException {
 
-        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        HttpStatus status = HttpStatus.FORBIDDEN;
 
         ErrorResponse errorResponse = new ErrorResponse(
                 false,
-                "Authentication is required or the access token is invalid or expired",
+                "You do not have permission to access this resource",
                 LocalDateTime.now(),
                 status.value(),
                 request.getRequestURI()

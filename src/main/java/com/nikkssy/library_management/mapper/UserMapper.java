@@ -3,6 +3,7 @@ package com.nikkssy.library_management.mapper;
 
 import com.nikkssy.library_management.dto.auth.request.RegisterRequest;
 import com.nikkssy.library_management.dto.auth.response.UserResponse;
+import com.nikkssy.library_management.entity.UserAuthProvider;
 import com.nikkssy.library_management.entity.Users;
 import com.nikkssy.library_management.entity.enums.AuthProvider;
 import com.nikkssy.library_management.entity.enums.Role;
@@ -23,7 +24,6 @@ public class UserMapper {
         user.setCountry(request.country());
         user.setCountrySortCode(request.countrySortCode());
 
-        user.setProvider(AuthProvider.LOCAL);
         user.setEnabled(true);
         user.setRole(Role.USER);
 
@@ -41,11 +41,54 @@ public class UserMapper {
                 user.getCountryCode(),
                 user.getCountry(),
                 user.getCountrySortCode(),
-                user.getProvider(),
                 user.getEnabled(),
                 user.getRole(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );
+    }
+
+    public Users toGoogleUser(
+            String fullName,
+            String email,
+            String username
+    ) {
+        Users user = new Users();
+
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setUsername(username);
+        user.setPassword(null);
+        user.setEnabled(true);
+        user.setRole(Role.USER);
+
+        return user;
+    }
+
+    public UserAuthProvider toGoogleAuthProvider(
+            Users user,
+            String googleSub
+    ) {
+        UserAuthProvider authProvider = new UserAuthProvider();
+
+        authProvider.setProvider(AuthProvider.GOOGLE);
+        authProvider.setProviderId(googleSub);
+
+        user.addAuthProvider(authProvider);
+
+        return authProvider;
+    }
+
+    public UserAuthProvider toLocalAuthProvider(Users user) {
+
+        UserAuthProvider authProvider = new UserAuthProvider();
+
+        authProvider.setUser(user);
+        authProvider.setProvider(AuthProvider.LOCAL);
+
+        // Set this after the user has been persisted.
+        authProvider.setProviderId(user.getId().toString());
+
+        return authProvider;
     }
 }

@@ -1,4 +1,4 @@
-package com.nikkssy.library_management.services.helper.security;
+package com.nikkssy.library_management.services.helper.security.jwt;
 
 import com.nikkssy.library_management.services.impl.auth.TokenHelperServiceImpl;
 import org.springframework.stereotype.Service;
