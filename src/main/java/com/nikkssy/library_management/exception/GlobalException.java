@@ -366,6 +366,29 @@ public class GlobalException {
                 ));
     }
 
+    /*
+     * ============================================================
+     * 403 - Forbidden
+     * ============================================================
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            AccessDeniedException exception,
+            HttpServletRequest request
+    ) {
+
+        HttpStatus status = HttpStatus.FORBIDDEN;
+
+        return ResponseEntity
+                .status(status)
+                .body(new ErrorResponse(
+                        false,
+                        exception.getMessage(),
+                        LocalDateTime.now(),
+                        status.value(),
+                        request.getRequestURI()
+                ));
+    }
 
     /*
      * ============================================================

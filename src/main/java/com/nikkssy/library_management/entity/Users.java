@@ -7,6 +7,7 @@ import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -105,6 +106,14 @@ public class Users {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private boolean emailVerified = false;
+
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private boolean phoneVerified = false;
 
     @UpdateTimestamp
     @Column(nullable = false)

@@ -79,59 +79,93 @@ public class SecurityConfig {
             DaoAuthenticationProvider authenticationProvider,
             JwtAuthenticationConverter jwtAuthenticationConverter,
             @Qualifier("auth-jwtDecoder") JwtDecoder jwtDecoder
-//            GoogleAuthenticationSuccessHandler googleAuthenticationSuccessHandler
-    )
-            throws Exception {
+    ) throws Exception {
 
         return http
+
+                // JWT API: stateless authentication.
                 .csrf(csrf -> csrf.disable())
+
                 .authenticationProvider(authenticationProvider)
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
-                .authorizeHttpRequests(
-                        authorize -> authorize
-                                .requestMatchers(
-                                        "/api/auth/signup",
-                                        "/api/auth/login",
-                                        "/api/auth/refresh-token",
-                                        "/api/auth/logout",
-                                        "/api/auth/forgot-password",
-                                        "/api/auth/reset-password"
-                                ).permitAll()
 
-                                .requestMatchers("/api/auth/logout-all")
-                                .authenticated()
+                .authorizeHttpRequests(authorize -> authorize
 
-                                        .requestMatchers("/api/admin/**")
-                                        .hasRole("ADMIN")
+                        .requestMatchers(
+                                "/api/auth/signup",
+                                "/api/auth/login",
+                                "/api/auth/refresh-token",
+                                "/api/auth/logout",
 
-                                        .requestMatchers("/api/**")
-                                        .authenticated()
+                                // Password reset
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password",
 
-                                        .anyRequest()
-                                        .permitAll()
+                                // Local email and phone OTP
+                                "/api/auth/otp/email/verify",
+                                "/api/auth/otp/phone/send",
+                                "/api/auth/otp/phone/verify"
+                        ).permitAll()
+
+                        // ==================================
+                        // AUTHENTICATED ENDPOINTS
+                        // ==================================
+
+                        .requestMatchers(
+                                "/api/auth/logout-all"
+                        ).authenticated()
+
+                        .requestMatchers(
+                                "/api/admin/**"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                "/api/**"
+                        ).authenticated()
+
+                        .anyRequest().permitAll()
                 )
 
-                 //Custom Exception handlers
+                // Custom exception handlers.
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler)
+
+                        .authenticationEntryPoint(
+                                authenticationEntryPoint
+                        )
+
+                        .accessDeniedHandler(
+                                accessDeniedHandler
+                        )
                 )
 
-// JWT validation for API requests
+                // JWT validation.
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .authenticationEntryPoint(authenticationEntryPoint)
+
+                        .authenticationEntryPoint(
+                                authenticationEntryPoint
+                        )
+
                         .jwt(jwt -> jwt
+
                                 .decoder(jwtDecoder)
-                                .jwtAuthenticationConverter(jwtAuthenticationConverter)
+
+                                .jwtAuthenticationConverter(
+                                        jwtAuthenticationConverter
+                                )
                         )
                 )
+
                 .cors(cors ->
-                        cors.configurationSource(corsConfigurationSource())
+                        cors.configurationSource(
+                                corsConfigurationSource()
                         )
+                )
+
                 .build();
     }
 
@@ -143,28 +177,54 @@ public class SecurityConfig {
     ) throws Exception {
 
         return http
+
                 .securityMatcher(
                         "/oauth2/**",
-                        "/login/oauth2/**"
+                        "/login/oauth2/**",
+
+                        // Google phone registration and verification
+                        "/api/auth/phone/register",
+                        "/api/auth/phone/verify"
                 )
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
                                 SessionCreationPolicy.IF_REQUIRED
                         )
                 )
+
+                .authorizeHttpRequests(auth -> auth
+
+                        // Google phone registration requires
+                        // an authenticated Google session.
+                        .requestMatchers(
+                                "/api/auth/phone/register",
+                                "/api/auth/phone/verify"
+                        ).authenticated()
+
+                        // OAuth2 authorization and callback endpoints.
+                        .anyRequest().permitAll()
+                )
+
                 .oauth2Login(oauth2 -> oauth2
 
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .oidcUserService(customOidcUserService)
+                        .userInfoEndpoint(userInfo ->
+                                userInfo.oidcUserService(
+                                        customOidcUserService
+                                )
                         )
 
                         .successHandler(googleAuthSuccessHandler)
 
                         .failureHandler(googleAuthFailureHandler)
                 )
+
+                .cors(cors ->
+                        cors.configurationSource(
+                                corsConfigurationSource()
+                        )
+                )
+
                 .build();
     }
 

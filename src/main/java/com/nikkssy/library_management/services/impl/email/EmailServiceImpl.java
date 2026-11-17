@@ -10,4 +10,7 @@ public interface EmailServiceImpl {
 
     void sendNotificationEmail(String recipient, String subject, String name,
                                String message, String actionLabel, String actionLink);
+
+    void sendEmailVerificationOtp(String recipient, String name, String otp);
+
 }

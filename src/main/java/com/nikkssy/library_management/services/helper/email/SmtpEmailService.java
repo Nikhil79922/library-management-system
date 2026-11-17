@@ -71,6 +71,27 @@ public class SmtpEmailService implements EmailServiceImpl {
         send(recipient, subject, "notification", vars);
     }
 
+    @Override
+    @Async("emailExecutor")
+    public void sendEmailVerificationOtp(
+            String recipient,
+            String name,
+            String otp
+    ) {
+        Map<String, Object> vars = new HashMap<>();
+
+        vars.put("name", name);
+        vars.put("otp", otp);
+        vars.put("expiryMinutes", 5);
+
+        send(
+                recipient,
+                "Verify Your Email - Library Management",
+                "email-verification-otp",
+                vars
+        );
+    }
+
     private void send(String recipient, String subject, String template, Map<String, Object> vars) {
         try {
             String html = templateService.render(template, vars);

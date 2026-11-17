@@ -62,6 +62,18 @@ public class GoogleAuthSuccessHandler implements AuthenticationSuccessHandler {
             );
         }
 
+// Stop users whose phone number is not verified.
+        if (!user.isPhoneVerified()) {
+
+            String redirectUrl = UriComponentsBuilder
+                    .fromUriString(frontendBaseUrl)
+                    .path("/oauth2/complete-registration")
+                    .build()
+                    .toUriString();
+
+            response.sendRedirect(redirectUrl);
+            return;
+        }
         // Generate access token.
         String accessToken = jwtService.generateToken(user);
 

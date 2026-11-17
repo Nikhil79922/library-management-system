@@ -1,18 +1,16 @@
 
 package com.nikkssy.library_management.controllers;
 
-import com.nikkssy.library_management.dto.auth.request.LoginRequest;
-import com.nikkssy.library_management.dto.auth.request.RegisterRequest;
-import com.nikkssy.library_management.dto.auth.request.ForgotPasswordRequest;
-import com.nikkssy.library_management.dto.auth.request.ResetPasswordRequest;
+import com.nikkssy.library_management.dto.auth.request.*;
 import com.nikkssy.library_management.dto.auth.response.AuthResult;
 import com.nikkssy.library_management.dto.auth.response.AuthResponse;
+import com.nikkssy.library_management.dto.auth.response.RegistrationResponse;
 import com.nikkssy.library_management.dto.commonRes.SuccessResponse;
+import com.nikkssy.library_management.entity.UserAuthProvider;
+import com.nikkssy.library_management.entity.enums.AuthProvider;
 import com.nikkssy.library_management.services.helper.cookies.AuthCookieManagement;
 import com.nikkssy.library_management.services.impl.auth.AuthServiceImpl;
 import com.nikkssy.library_management.services.impl.auth.PasswordResetServiceImpl;
-
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +19,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,30 +38,124 @@ public class AuthController {
     private final PasswordResetServiceImpl passwordResetService;
     private final AuthCookieManagement cookieManagement;
 
-    // Register new user
     @PostMapping("/signup")
-    public ResponseEntity<SuccessResponse<AuthResponse>> register(
+    public ResponseEntity<SuccessResponse<RegistrationResponse>> register(
             @Valid @RequestBody RegisterRequest request
     ) {
 
-        AuthResult result = authService.register(request);
+        RegistrationResponse result = authService.register(request);
 
-        ResponseCookie cookie = cookieManagement.createRefreshTokenCookie(
-                result.refreshToken().refreshToken(),
-                result.refreshToken().expiryDate()
-        );
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
                 .body(
                         new SuccessResponse<>(
                                 true,
-                                "User registered successfully",
-                                result.authResponse(),
+                                "Registration initiated. Please verify your email and phone number.",
+                                result,
                                 LocalDateTime.now(),
                                 HttpStatus.CREATED.value()
                         )
                 );
+    }
+
+    @PostMapping("/otp/email/verify")
+    public ResponseEntity<SuccessResponse<RegistrationResponse>> verifyEmailOtp(
+            @Valid @RequestBody VerifyEmailOtpRequest request
+    ) {
+
+        RegistrationResponse result = authService.verifyEmailOtp(
+                request.email(),
+                request.otp()
+        );
+
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        true,
+                        "Email verified successfully.",
+                        result,
+                        LocalDateTime.now(),
+                        HttpStatus.OK.value()
+                )
+        );
+    }
+
+
+    @PostMapping("/otp/phone/send")
+    public ResponseEntity<SuccessResponse<RegistrationResponse>> sendPhoneOtp(
+            @Valid @RequestBody SendPhoneOtpRequest request
+    ) {
+
+        RegistrationResponse result =
+                authService.sendPhoneOtp(request.email());
+
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        true,
+                        "Phone verification OTP generated successfully.",
+                        result,
+                        LocalDateTime.now(),
+                        HttpStatus.OK.value()
+                )
+        );
+    }
+
+
+    @PostMapping("/otp/phone/verify")
+    public ResponseEntity<SuccessResponse<AuthResponse>> verifyPhoneOtp(
+            @Valid @RequestBody VerifyPhoneOtpRequest request
+    ) {
+
+        AuthResult result = authService.verifyPhoneOtp(
+                request.email(),
+                request.otp()
+        );
+
+        ResponseCookie cookie =
+                cookieManagement.createRefreshTokenCookie(
+                        result.refreshToken().refreshToken(),
+                        result.refreshToken().expiryDate()
+                );
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(
+                        new SuccessResponse<>(
+                                true,
+                                "Registration completed successfully.",
+                                result.authResponse(),
+                                LocalDateTime.now(),
+                                HttpStatus.OK.value()
+                        )
+                );
+    }
+
+
+    @PostMapping("/phone/register")
+    public ResponseEntity<SuccessResponse<RegistrationResponse>> registerPhone(
+            @Valid @RequestBody RegisterPhoneRequest request,
+            @AuthenticationPrincipal OidcUser oidcUser
+    ) {
+
+        if (oidcUser == null) {
+            throw new OAuth2AuthenticationException(
+                    "Google authentication required"
+            );
+        }
+
+        RegistrationResponse result = authService.registerPhone(
+                oidcUser.getSubject(),
+                request
+        );
+
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        true,
+                        "Phone details saved. Please verify your OTP.",
+                        result,
+                        LocalDateTime.now(),
+                        HttpStatus.OK.value()
+                )
+        );
     }
 
     // Authenticate user

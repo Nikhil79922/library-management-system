@@ -16,6 +16,8 @@ public record UserResponse(
         String countryCode,
         String country,
         String countrySortCode,
+        Boolean emailVerified,
+        Boolean phoneVerified,
         Boolean enabled,
         Role role,
         LocalDateTime createdAt,

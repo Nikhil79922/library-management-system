@@ -1,3 +1,4 @@
+
 package com.nikkssy.library_management.services.businessLogic.auth;
 
 import com.nikkssy.library_management.entity.UserAuthProvider;
@@ -10,8 +11,10 @@ import com.nikkssy.library_management.repository.UserRepository;
 import com.nikkssy.library_management.services.impl.auth.PasswordResetServiceImpl;
 import com.nikkssy.library_management.services.impl.auth.PasswordResetTokenServiceImpl;
 import com.nikkssy.library_management.services.impl.email.EmailServiceImpl;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -73,21 +76,24 @@ public class PasswordResetService implements PasswordResetServiceImpl {
         );
     }
 
-
     @Override
     @Transactional
     public void resetPassword(String token, String newPassword) {
 
         String normalizedToken = token.trim();
 
+        // Validate the reset token and resolve the account.
         Users user =
                 passwordResetTokenService.validateResetToken(normalizedToken);
 
-        // Set the new local password.
+        // Update password.
         String encodedPassword = passwordEncoder.encode(newPassword);
 
         user.setPassword(encodedPassword);
         user.setPasswordChangedAt(Instant.now());
+
+        // A successfully validated reset token proves email ownership.
+        user.setEmailVerified(true);
 
         // Check whether the user already supports LOCAL authentication.
         boolean hasLocalProvider = user.getAuthProviders()
@@ -109,7 +115,6 @@ public class PasswordResetService implements PasswordResetServiceImpl {
 
         userRepository.save(user);
 
-        // Revoke all active refresh tokens for this user.
         refreshTokenService.revokeAllUserTokens(user.getUsername());
 
         sendPasswordChangedEmail(user);
@@ -118,8 +123,8 @@ public class PasswordResetService implements PasswordResetServiceImpl {
 
     private void sendPasswordChangedEmail(Users user) {
 
-        // A mail failure must not roll back or fail a successful reset.
         try {
+
             emailService.sendNotificationEmail(
                     user.getEmail(),
                     "Your Library Management password was changed",
@@ -127,12 +132,19 @@ public class PasswordResetService implements PasswordResetServiceImpl {
                     """
                     Your password was changed successfully, and you have been signed out of all devices.
 
-                    If you did not make this change, reset your password immediately and contact support.""",
+                    If you did not make this change, reset your password immediately and contact support.
+                    """,
                     "Log In",
                     frontendBaseUrl
             );
+
         } catch (Exception e) {
-            log.warn("Password-changed email failed for user {}", user.getUsername(), e);
+
+            log.warn(
+                    "Password-changed email failed for user {}",
+                    user.getUsername(),
+                    e
+            );
         }
     }
 }

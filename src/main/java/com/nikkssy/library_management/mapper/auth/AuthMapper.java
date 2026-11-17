@@ -1,6 +1,7 @@
 package com.nikkssy.library_management.mapper.auth;
 
 import com.nikkssy.library_management.dto.auth.response.AuthResponse;
+import com.nikkssy.library_management.dto.auth.response.RegistrationResponse;
 import com.nikkssy.library_management.entity.Users;
 import com.nikkssy.library_management.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -22,4 +23,5 @@ public class AuthMapper {
                 userMapper.toResponse(user)
         );
     }
+
 }

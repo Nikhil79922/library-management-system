@@ -23,6 +23,8 @@ public class UserMapper {
         user.setCountryCode(request.countryCode());
         user.setCountry(request.country());
         user.setCountrySortCode(request.countrySortCode());
+        user.setPhoneVerified(false);
+        user.setEmailVerified(false);
 
         user.setEnabled(true);
         user.setRole(Role.USER);
@@ -42,6 +44,8 @@ public class UserMapper {
                 user.getCountry(),
                 user.getCountrySortCode(),
                 user.getEnabled(),
+                user.isEmailVerified(),
+                user.isPhoneVerified(),
                 user.getRole(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
@@ -61,6 +65,8 @@ public class UserMapper {
         user.setPassword(null);
         user.setEnabled(true);
         user.setRole(Role.USER);
+        user.setEmailVerified(true);
+        user.setPhoneVerified(false);
 
         return user;
     }

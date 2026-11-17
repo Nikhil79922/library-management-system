@@ -3,6 +3,7 @@ package com.nikkssy.library_management.mapper.auth;
 import com.nikkssy.library_management.dto.auth.response.AuthResult;
 import com.nikkssy.library_management.dto.auth.response.AuthResponse;
 import com.nikkssy.library_management.dto.auth.response.RefreshTokenResponse;
+import com.nikkssy.library_management.dto.auth.response.RegistrationResponse;
 import com.nikkssy.library_management.entity.Users;
 
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,19 @@ public class AuthResultMapper {
         return new AuthResult(
                 authResponse,
                 refreshToken
+        );
+    }
+
+
+    public RegistrationResponse toRegistrationResponse(
+            String email,
+            boolean emailVerified,
+            boolean phoneVerified
+    ){
+        return new RegistrationResponse(
+                email,
+                emailVerified,
+                phoneVerified
         );
     }
 }
