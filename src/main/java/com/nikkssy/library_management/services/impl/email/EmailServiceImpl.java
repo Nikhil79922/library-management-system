@@ -13,4 +13,6 @@ public interface EmailServiceImpl {
 
     void sendEmailVerificationOtp(String recipient, String name, String otp);
 
+    void sendLoginOtp(String recipient, String name, String otp);
+
 }

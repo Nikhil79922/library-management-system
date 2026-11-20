@@ -113,4 +113,21 @@ public class SmtpEmailService implements EmailServiceImpl {
             log.error("Failed to send '{}' email to {}", subject, recipient, e);
         }
     }
+
+    @Override
+    @Async("emailExecutor")
+    public void sendLoginOtp(String recipient, String name, String otp) {
+        Map<String, Object> vars = new HashMap<>();
+
+        vars.put("name", name);
+        vars.put("otp", otp);
+        vars.put("expiryMinutes", 5);
+
+        send(
+                recipient,
+                "Your Login OTP - Library Management",
+                "login-otp",
+                vars
+        );
+    }
 }

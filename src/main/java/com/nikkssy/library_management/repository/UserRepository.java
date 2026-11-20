@@ -16,6 +16,7 @@ public interface UserRepository extends JpaRepository<Users, Long> {
             String email
     );
 
+    Optional<Users> findByCountryCodeAndPhone(String countryCode, String phone);
 
     boolean existsByCountryCodeAndPhone(String countryCode, String phone);
     

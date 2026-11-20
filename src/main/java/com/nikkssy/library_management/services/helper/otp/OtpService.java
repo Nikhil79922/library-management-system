@@ -185,4 +185,35 @@ public class OtpService {
             );
         }
     }
+
+    public void generateAndSendLoginEmailOtp(Users user) {
+
+        String otp = generateOtp(
+                OtpPurpose.LOGIN_EMAIL,
+                user.getEmail()
+        );
+
+        emailService.sendLoginOtp(
+                user.getEmail(),
+                user.getFullName(),
+                otp
+        );
+    }
+
+
+    public void generateAndLogLoginPhoneOtp(Users user) {
+
+        String identifier = getPhoneIdentifier(user);
+
+        String otp = generateOtp(
+                OtpPurpose.LOGIN_PHONE,
+                identifier
+        );
+
+        log.info(
+                "Development phone login OTP for user {}: {}",
+                user.getId(),
+                otp
+        );
+    }
 }

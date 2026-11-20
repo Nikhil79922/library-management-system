@@ -1,8 +1,6 @@
 package com.nikkssy.library_management.services.impl.auth;
 
-import com.nikkssy.library_management.dto.auth.request.LoginRequest;
-import com.nikkssy.library_management.dto.auth.request.RegisterPhoneRequest;
-import com.nikkssy.library_management.dto.auth.request.RegisterRequest;
+import com.nikkssy.library_management.dto.auth.request.*;
 import com.nikkssy.library_management.dto.auth.response.AuthResult;
 import com.nikkssy.library_management.dto.auth.response.RegistrationResponse;
 
@@ -26,4 +24,12 @@ public interface AuthServiceImpl {
     void logOut(String rawToken);
 
     int logOutAll(String userName);
+
+    void sendEmailLoginOtp(EmailOtpLoginRequest request);
+
+    void sendPhoneLoginOtp(PhoneOtpLoginRequest request);
+
+    AuthResult verifyEmailLoginOtp(VerifyEmailOtpLoginRequest request);
+
+    AuthResult verifyPhoneLoginOtp(VerifyPhoneOtpLoginRequest request);
 }

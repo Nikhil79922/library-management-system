@@ -9,7 +9,6 @@ import com.nikkssy.library_management.services.helper.security.oAuth.CustomOidcU
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -24,15 +23,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-
-
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
 import java.util.Collections;
 
 @Configuration
@@ -109,7 +102,13 @@ public class SecurityConfig {
                                 // Local email and phone OTP
                                 "/api/auth/otp/email/verify",
                                 "/api/auth/otp/phone/send",
-                                "/api/auth/otp/phone/verify"
+                                "/api/auth/otp/phone/verify",
+
+                                //OTP authentication
+                                "/api/auth/otp/login/email/send",
+                                "/api/auth/otp/login/email/verify",
+                                "/api/auth/otp/login/phone/send",
+                                "/api/auth/otp/login/phone/verify"
                         ).permitAll()
 
                         // ==================================

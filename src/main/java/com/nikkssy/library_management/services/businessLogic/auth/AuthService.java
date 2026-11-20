@@ -1,8 +1,6 @@
 package com.nikkssy.library_management.services.businessLogic.auth;
 
-import com.nikkssy.library_management.dto.auth.request.LoginRequest;
-import com.nikkssy.library_management.dto.auth.request.RegisterPhoneRequest;
-import com.nikkssy.library_management.dto.auth.request.RegisterRequest;
+import com.nikkssy.library_management.dto.auth.request.*;
 import com.nikkssy.library_management.dto.auth.response.RegistrationResponse;
 import com.nikkssy.library_management.entity.UserAuthProvider;
 import com.nikkssy.library_management.entity.enums.AuthProvider;
@@ -372,6 +370,108 @@ public class AuthService implements AuthServiceImpl {
         return refreshTokenService.revokeAllUserTokens(userName);
     }
 
+    // LOGIN WITH EMAIL OTP: SEND
+    @Override
+    @Transactional
+    public void sendEmailLoginOtp(EmailOtpLoginRequest request) {
+
+        // Silent for unknown or ineligible users, so the response
+        // can't be used to find out which emails are registered.
+        userRepository.findByEmailIgnoreCase(request.email().trim())
+                .ifPresent( user-> {
+                    validateOtpLoginEligibility(user);
+                    otpService.generateAndSendLoginEmailOtp(user);
+                });
+    }
+
+    // LOGIN WITH PHONE OTP: SEND
+    @Override
+    @Transactional
+    public void sendPhoneLoginOtp(PhoneOtpLoginRequest request) {
+
+       userRepository.findByCountryCodeAndPhone(
+                        request.countryCode().trim(),
+                        request.phoneNumber().trim()
+                )
+                .ifPresent( user-> {
+                            validateOtpLoginEligibility(user);
+                            otpService.generateAndLogLoginPhoneOtp(user);
+                });
+
+    }
+
+    // LOGIN WITH EMAIL OTP: VERIFY
+    @Override
+    @Transactional
+    public AuthResult verifyEmailLoginOtp(VerifyEmailOtpLoginRequest request) {
+
+        Users user = userRepository.findByEmailIgnoreCase(request.email().trim())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Invalid or expired OTP")
+                );
+
+        otpService.verifyOtp(
+                OtpPurpose.LOGIN_EMAIL,
+                user.getEmail(),
+                request.otp()
+        );
+
+        if(!user.isEmailVerified())  user.setEmailVerified(true);
+
+        return issueTokens(user);
+    }
+
+    // LOGIN WITH PHONE OTP: VERIFY
+    @Override
+    @Transactional
+    public AuthResult verifyPhoneLoginOtp(VerifyPhoneOtpLoginRequest request) {
+
+        Users user = userRepository.findByCountryCodeAndPhone(
+                        request.countryCode().trim(),
+                        request.phoneNumber().trim()
+                )
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Invalid or expired OTP")
+                );
+
+        validateOtpLoginEligibility(user);
+
+        otpService.verifyOtp(
+                OtpPurpose.LOGIN_PHONE,
+                user.getCountryCode() + ":" + user.getPhone(),
+                request.otp()
+        );
+        if(!user.isPhoneVerified())  user.setPhoneVerified(true);
+
+        return issueTokens(user);
+    }
+
+    // Same eligibility rules as password login.
+    private void validateOtpLoginEligibility(Users user) {
+
+        if (!Boolean.TRUE.equals(user.getEnabled())) {
+            throw new AccessDeniedException("Account is disabled.");
+        }
+
+        if (!user.isEmailVerified() || !user.isPhoneVerified()) {
+            throw new AccessDeniedException(
+                    "Please complete your email and phone verification before logging in."
+            );
+        }
+    }
+
+    private AuthResult issueTokens(Users user) {
+
+        String accessToken = jwtService.generateToken(user);
+
+        var refreshToken = refreshTokenService.createRefreshToken(user);
+
+        return authResultMapper.toAuthResult(
+                accessToken,
+                refreshToken,
+                user
+        );
+    }
 
 
     private void sendWelcomeEmail(Users user) {

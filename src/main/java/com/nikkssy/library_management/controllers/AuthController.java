@@ -305,4 +305,95 @@ public class AuthController {
                         )
                 );
     }
+
+    // LOGIN WITH EMAIL OTP: SEND
+    @PostMapping("/otp/login/email/send")
+    public ResponseEntity<SuccessResponse<Void>> sendEmailLoginOtp(
+            @Valid @RequestBody EmailOtpLoginRequest request
+    ) {
+
+        authService.sendEmailLoginOtp(request);
+
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        true,
+                        "If an eligible account exists, an OTP has been sent.",
+                        null,
+                        LocalDateTime.now(),
+                        HttpStatus.OK.value()
+                )
+        );
+    }
+
+    // LOGIN WITH PHONE OTP: SEND
+    @PostMapping("/otp/login/phone/send")
+    public ResponseEntity<SuccessResponse<Void>> sendPhoneLoginOtp(
+            @Valid @RequestBody PhoneOtpLoginRequest request
+    ) {
+
+        authService.sendPhoneLoginOtp(request);
+
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        true,
+                        "If an eligible account exists, an OTP has been sent.",
+                        null,
+                        LocalDateTime.now(),
+                        HttpStatus.OK.value()
+                )
+        );
+    }
+
+    // LOGIN WITH EMAIL OTP: VERIFY
+    @PostMapping("/otp/login/email/verify")
+    public ResponseEntity<SuccessResponse<AuthResponse>> verifyEmailLoginOtp(
+            @Valid @RequestBody VerifyEmailOtpLoginRequest request
+    ) {
+
+        AuthResult result = authService.verifyEmailLoginOtp(request);
+
+        ResponseCookie cookie = cookieManagement.createRefreshTokenCookie(
+                result.refreshToken().refreshToken(),
+                result.refreshToken().expiryDate()
+        );
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(
+                        new SuccessResponse<>(
+                                true,
+                                "User logged in successfully.",
+                                result.authResponse(),
+                                LocalDateTime.now(),
+                                HttpStatus.OK.value()
+                        )
+                );
+    }
+
+    // LOGIN WITH PHONE OTP: VERIFY
+    @PostMapping("/otp/login/phone/verify")
+    public ResponseEntity<SuccessResponse<AuthResponse>> verifyPhoneLoginOtp(
+            @Valid @RequestBody VerifyPhoneOtpLoginRequest request
+    ) {
+
+        AuthResult result = authService.verifyPhoneLoginOtp(request);
+
+        ResponseCookie cookie = cookieManagement.createRefreshTokenCookie(
+                result.refreshToken().refreshToken(),
+                result.refreshToken().expiryDate()
+        );
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(
+                        new SuccessResponse<>(
+                                true,
+                                "User logged in successfully.",
+                                result.authResponse(),
+                                LocalDateTime.now(),
+                                HttpStatus.OK.value()
+                        )
+                );
+    }
+
 }
