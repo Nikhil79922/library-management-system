@@ -108,7 +108,12 @@ public class SecurityConfig {
                                 "/api/auth/otp/login/email/send",
                                 "/api/auth/otp/login/email/verify",
                                 "/api/auth/otp/login/phone/send",
-                                "/api/auth/otp/login/phone/verify"
+                                "/api/auth/otp/login/phone/verify",
+
+                                //Admin Login
+                                "/api/admin/auth/login",
+                                "/api/admin/auth/refresh-token",
+                                "/api/admin/auth/logout"
                         ).permitAll()
 
                         // ==================================

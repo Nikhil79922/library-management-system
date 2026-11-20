@@ -5,6 +5,7 @@ import com.nikkssy.library_management.dto.auth.response.RegistrationResponse;
 import com.nikkssy.library_management.entity.UserAuthProvider;
 import com.nikkssy.library_management.entity.enums.AuthProvider;
 import com.nikkssy.library_management.entity.enums.OtpPurpose;
+import com.nikkssy.library_management.entity.enums.Role;
 import com.nikkssy.library_management.exception.AccessDeniedException;
 import com.nikkssy.library_management.exception.IllegalArgumentException;
 import com.nikkssy.library_management.dto.auth.response.AuthResult;
@@ -463,6 +464,49 @@ public class AuthService implements AuthServiceImpl {
     private AuthResult issueTokens(Users user) {
 
         String accessToken = jwtService.generateToken(user);
+
+        var refreshToken = refreshTokenService.createRefreshToken(user);
+
+        return authResultMapper.toAuthResult(
+                accessToken,
+                refreshToken,
+                user
+        );
+    }
+
+    @Override
+    @Transactional
+    public AuthResult adminLogin(LoginRequest request) {
+
+        Authentication authentication =
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                request.usernameOrEmail(),
+                                request.password()
+                        )
+                );
+
+        CustomUserDetails userDetails =
+                (CustomUserDetails) authentication.getPrincipal();
+
+        Users user = userDetails.getUser();
+
+        // Only ADMIN can log in through Admin authentication
+        if (user.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException(
+                    "You are not authorized to access the Admin portal."
+            );
+        }
+
+        if (!Boolean.TRUE.equals(user.getEnabled()) ||
+                !user.isEmailVerified() ||
+                !user.isPhoneVerified()) {
+            throw new AccessDeniedException(
+                    "Admin account is disabled or not fully verified."
+            );
+        }
+
+        String accessToken = jwtService.generateToken(authentication);
 
         var refreshToken = refreshTokenService.createRefreshToken(user);
 

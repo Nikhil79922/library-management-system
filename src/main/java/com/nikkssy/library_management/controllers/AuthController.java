@@ -6,8 +6,6 @@ import com.nikkssy.library_management.dto.auth.response.AuthResult;
 import com.nikkssy.library_management.dto.auth.response.AuthResponse;
 import com.nikkssy.library_management.dto.auth.response.RegistrationResponse;
 import com.nikkssy.library_management.dto.commonRes.SuccessResponse;
-import com.nikkssy.library_management.entity.UserAuthProvider;
-import com.nikkssy.library_management.entity.enums.AuthProvider;
 import com.nikkssy.library_management.services.helper.cookies.AuthCookieManagement;
 import com.nikkssy.library_management.services.impl.auth.AuthServiceImpl;
 import com.nikkssy.library_management.services.impl.auth.PasswordResetServiceImpl;

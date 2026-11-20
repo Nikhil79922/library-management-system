@@ -1,4 +1,4 @@
-package com.nikkssy.library_management.infra;
+package com.nikkssy.library_management.init;
 
 import java.time.Duration;
 

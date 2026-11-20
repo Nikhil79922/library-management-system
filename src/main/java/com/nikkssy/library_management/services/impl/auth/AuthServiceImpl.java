@@ -32,4 +32,6 @@ public interface AuthServiceImpl {
     AuthResult verifyEmailLoginOtp(VerifyEmailOtpLoginRequest request);
 
     AuthResult verifyPhoneLoginOtp(VerifyPhoneOtpLoginRequest request);
+
+    AuthResult adminLogin(LoginRequest request);
 }
